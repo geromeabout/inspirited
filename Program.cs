@@ -76,7 +76,10 @@ namespace inspirited
                     {
                         Console.WriteLine("Player Not Found");
                     }
-                    IsStart(playerwithName.Id);
+                    else
+                    {
+                        IsStart(playerwithName.Id);
+                    }
                 }
             }
         }
