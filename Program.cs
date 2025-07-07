@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace inspirited
@@ -43,134 +44,80 @@ namespace inspirited
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to inspirited!");
-            LoadingCharacters();
-            LoadingStats();
-            Characters();
+            Console.WriteLine("Press Enter key to continue");
+            ConsoleKeyInfo _key = Console.ReadKey();
+
+            if (_key.Key == ConsoleKey.Enter)
+            {
+                Characters();
+            }
+            Console.WriteLine("Do you wish to create a character? Yes or No!");
+            char isCreate = Convert.ToChar(Console.ReadLine());
+            switch (isCreate)
+            {
+                case 'Y':
+                    CreatePlayer();
+                    break;
+                case 'y':
+                    CreatePlayer();
+                    break;
+                case 'N':
+                    CreatePlayer();
+                    break;
+                default:
+                    break;
+            }
+            GameStart();
         }
 
-        private static async void Characters()
+        private static void GameStart()
         {
-            Console.WriteLine("List of Characters");
+            Console.WriteLine("Game Start!");
+            Console.Write("Enter your ID: ");
+            int _id = Convert.ToInt16(Console.ReadLine());
+            using (var dbContext = new ISDataContext())
+            {
+                var player = dbContext.Players.Find(_id);
+                if (player == null)
+                {
+                Console.WriteLine("Not found!");
+                }
+                else
+                {
+                Console.WriteLine(player.PlayerName + "\t");
+                }
+            }
+        }
+        private static void CreatePlayer()
+        {
+            Console.Write("Enter your name: ");
+            string _name = Console.ReadLine();
+            Console.Write("Character ID:");
+            int _id = Convert.ToInt16(Console.ReadLine());
+            var player = new Player
+            {
+                PlayerName = _name,
+                CharacterId = _id
+            };
+
+            using (var dbContext = new ISDataContext())
+            {
+                dbContext.Players.Add(player);
+                dbContext.SaveChanges();
+                Console.WriteLine("Character Successfully Created!");
+            }
+        }
+
+        private static void Characters()
+        {
+            Console.WriteLine("List of characters:");
             using (var dbContext = new ISDataContext())
             {
                 var characters = dbContext.Characters;
                 foreach (var character in characters)
                 {
-                    Console.WriteLine(character.Id+ "\t" +character.Type);
+                    Console.WriteLine(character.Id + "\t" + character.Type);
                 }
-            }
-            Console.WriteLine("Do you want to create your character? Y(es) or N(o)!");
-            char isCreate = Convert.ToChar(Console.ReadLine());
-            if (isCreate == 'Y' || isCreate =='y')
-            {
-                CreatePlayer();
-            }
-            else
-            {
-                Console.WriteLine("Enter player name:");
-                string playerName = Console.ReadLine();
-                using (var dbContext = new ISDataContext())
-                {
-                    var playerwithName = dbContext.Players.SingleOrDefault(c => c.PlayerName == playerName);
-                    if (playerwithName is null)
-                    {
-                        Console.WriteLine("Player Not Found");
-                    }
-                    else
-                    {
-                        IsStart(playerwithName.Id);
-                    }
-                }
-            }
-        }
-
-        private async static void CreatePlayer()
-        {
-                Console.WriteLine("Enter Player Name:");
-                string playerName = Console.ReadLine();
-                Console.WriteLine("Enter selected Character ID:");
-                int charactedId = Convert.ToInt16(Console.ReadLine());
-                using (var dbContext = new ISDataContext())
-                {
-                    var playerwithSameName = dbContext.Players.FirstAsync(c => c.PlayerName == playerName);
-                    if (playerwithSameName is not null) return;
-                    var player = new Player()
-                    {
-                        PlayerName = playerName,
-                        CharacterId = charactedId
-                    };
-                    dbContext.Add(player);
-                    await dbContext.SaveChangesAsync();
-                    Console.WriteLine(player.PlayerName +" is created.");
-                    IsStart(player.Id);
-                }
-        }
-
-        private static void IsStart(int Id)
-        {
-                    Console.WriteLine("Do you want to start? Y(es) or N(o)!");
-                    char isStart = Convert.ToChar(Console.ReadLine());
-                    if (isStart == 'Y' || isStart == 'y')
-                    {
-                        GameStart(Id);
-                    }
-                    else
-                    {
-                        return;
-                    }
-        }
-
-        private static void GameStart(int Id)
-        {
-            LoadPlayer(Id);
-        }
-
-        private static void LoadPlayer(int Id)
-        {
-            using (var dbContext = new ISDataContext())
-            {
-                var playerwithId = dbContext.Players.Find(Id);
-                if (playerwithId is null) return;
-            }
-        }
-
-        private static void LoadingStats()
-        {
-            using (var dbContext = new ISDataContext())
-            {
-                if (dbContext.Statistics.Any())
-                {
-                    return;
-                }
-                var stat = new Statistics
-                {
-                    CharacterId = 1,
-                    Constitution = 25,
-                    Strength = 25,
-                    Wisdom = 25,
-                    Intelligence = 25,
-                    Dexterity = 25,
-                    Charisma = 25
-                };
-            }
-        }
-
-        private static async void LoadingCharacters()
-        {
-            using (var dbContext = new ISDataContext())
-            {
-                if (dbContext.Characters.Any())
-                {
-                    return;
-                }
-
-                var character = new Character
-                {
-                    Type = "Swordsman",
-                    Details = "A person with swords"
-                };
-                dbContext.Add(character);
-                await dbContext.SaveChangesAsync();
             }
         }
     }
