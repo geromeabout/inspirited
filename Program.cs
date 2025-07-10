@@ -39,11 +39,12 @@ namespace inspirited
         public DbSet<Statistics> Statistics { get; set; }
         public DbSet<Player> Players { get; set; }
     }
-    internal class Program
+    class Program
     {
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to inspirited!");
+            LoadStatistics();
             Console.WriteLine("Press Enter key to continue");
             ConsoleKeyInfo _key = Console.ReadKey();
 
@@ -52,41 +53,68 @@ namespace inspirited
                 Characters();
             }
             Console.WriteLine("Do you wish to create a character? Yes or No!");
-            char isCreate = Convert.ToChar(Console.ReadLine());
-            switch (isCreate)
+            ConsoleKeyInfo isCreate = Console.ReadKey();
+            if (isCreate.Key == ConsoleKey.Y)
             {
-                case 'Y':
-                    CreatePlayer();
-                    break;
-                case 'y':
-                    CreatePlayer();
-                    break;
-                case 'N':
-                    CreatePlayer();
-                    break;
-                default:
-                    break;
+                CreatePlayer();
+                GameStart();
             }
-            GameStart();
+            else if (isCreate.Key == ConsoleKey.N)
+            {
+                GameStart();
+            }
+        }
+
+        private static void LoadStatistics()
+        {
+            using (var dbContext = new ISDataContext())
+            {
+                if (!dbContext.Characters.Any())
+                {
+                    var characters = new List<Character>()
+                    {
+                        new Character {Id=1, Type = "Warrior", Details="A long sworded person"},
+                        new Character {Id=2,Type="Archer", Details="Arrow and Bow person"},
+                        new Character {Id=3,Type="Mage", Details="Spell Caster"}
+                    };
+                    dbContext.Characters.AddRange(characters);
+                    dbContext.SaveChanges();
+                }
+                if (!dbContext.Statistics.Any())
+                {
+                    var stats = new List<Statistics>()
+                    {
+                        new Statistics {CharacterId=1, Charisma=10, Constitution=10, Strength=10, Dexterity=0, Intelligence=0,Wisdom=0},
+                        new Statistics {CharacterId=2, Charisma=10, Constitution=0, Strength=10, Dexterity=10, Intelligence=0,Wisdom=0},
+                        new Statistics {CharacterId=3, Charisma=10, Constitution=0, Strength=0, Dexterity=0, Intelligence=10,Wisdom=10}
+                    };
+
+                    dbContext.Statistics.AddRange(stats);
+                    dbContext.SaveChanges();
+                }
+            }
         }
 
         private static void GameStart()
         {
             Console.WriteLine("Game Start!");
-            Console.Write("Enter your ID: ");
-            int _id = Convert.ToInt16(Console.ReadLine());
-            using (var dbContext = new ISDataContext())
+            string result;
+            do
             {
-                var player = dbContext.Players.Find(_id);
-                if (player == null)
+                Console.Write("Enter your ID: ");
+                int _id = Convert.ToInt16(Console.ReadLine());
+                result = GetPlayerName(_id);
+            } while (result == string.Empty);
+            Console.WriteLine($"Welcome to Inspirited, {result}");
+
+        }
+        static string GetPlayerName(int id)
+        {
+            using (var dbContext = new ISDataContext())
                 {
-                Console.WriteLine("Not found!");
+                    var player = dbContext.Players.Where(c => c.Id == id).Select(p => p.PlayerName).FirstOrDefault();
+                    return player ?? string.Empty;
                 }
-                else
-                {
-                Console.WriteLine(player.PlayerName + "\t");
-                }
-            }
         }
         private static void CreatePlayer()
         {
